@@ -1,61 +1,58 @@
-# Model card: Nuri area classifier v0.1.0
+# 모델 카드: 누리 영역 분류기 v0.1.0
 
-## Intended use
+## 의도된 사용
 
-Given a Korean description of one child's behavior during an activity, return the
-Nuri area that the description most strongly evidences, plus a second candidate.
-Scope of this MVP: 5-area classification only.
+한 아동의 활동 중 행동을 설명한 한국어 텍스트를 받아, 그 설명이 가장 강하게 뒷받침하는
+누리 영역과 두 번째 후보를 돌려줍니다. 이 MVP의 범위는 **5개 영역 분류뿐**입니다.
 
-Intended consumers: the team's integration system (voice transcript -> text ->
-this model -> display), and demo/pitch material.
+사용처: 팀 통합 시스템(음성 전사 -> 텍스트 -> 이 모델 -> 표시), 데모·피치 자료.
 
-## Out of scope
+## 범위 밖
 
-- Item (indicator) level analysis, developmental level 1-4, strong/weak **items**.
-- Cross-child comparison, developmental diagnosis, or any clinical claim.
-- Speech recognition, dialogue management, recommendation, map/LED output.
-- English or mixed-language input; the training data is Korean only.
+- 항목(지표) 단위 분석, 발달 수준 1-4, 강·약 **항목** 판정.
+- 아동 간 비교, 발달 진단, 임상적 판단.
+- 음성 인식, 대화 관리, 활동 추천, 지도/LED 출력.
+- 영어·혼합 언어 입력. 학습 데이터는 한국어뿐입니다.
 
-## Training data
+## 학습 데이터
 
-- `data/train.csv`: 666 records, 57 indicator groups, five areas.
-  - KICCE observation scale vignettes (indicator + level 1-4, three vignettes per level).
-  - Ministry of Education / Ministry of Health and Welfare casebook excerpts.
-- `data/val.csv`: 158 records, 13 groups, used here for reporting only.
-- Only the `text` column is a feature. `label` is the target. `item_text`,
-  `content_category`, `group_id`, `session` are label- or source-derived and are
-  never used as input.
-- Provenance, licensing and known label ambiguities: [data_sheet.md](data_sheet.md).
+- `data/train.csv`: 666행, 지표 그룹 57개, 5개 영역.
+  - KICCE 유아관찰척도 관찰 장면(지표 + 수준 1-4, 수준마다 장면 3개).
+  - 교육부·보건복지부 놀이 사례집 발췌.
+- `data/val.csv`: 158행, 13개 그룹. 이 저장소에서는 보고용으로만 씁니다.
+- 특징은 `text` 열 하나입니다. `label`이 정답입니다. `item_text`,
+  `content_category`, `group_id`, `session`은 라벨·출처에서 파생된 값이라 입력으로
+  쓰지 않습니다.
+- 출처, 라이선스, 알려진 라벨 모호성: [data_sheet.md](data_sheet.md).
 
-## Model
+## 모델
 
-| Element | Setting |
+| 요소 | 설정 |
 |---|---|
-| Features | character 2-5 gram TF-IDF, sublinear TF, `min_df=1`, L2 normalized, fit on train only |
-| Preprocessing | Unicode NFC, Latin lowercase, whitespace collapse; no morphological analyzer |
-| Classifier | `LinearSVC(C=10)` + sigmoid calibration |
-| Calibration CV | `GroupKFold(5)` over `group_id`, so an indicator group never calibrates on itself |
-| Seed | 42 (deterministic given the same library versions) |
-| Inference | segments the input by sentence, averages the five area probabilities |
+| 특징 | 문자 2-5그램 TF-IDF, sublinear TF, `min_df=1`, L2 정규화, 학습 행에서만 적합 |
+| 전처리 | Unicode NFC, 라틴 소문자화, 공백 정리. 형태소 분석기 없음 |
+| 분류기 | `LinearSVC(C=10)` + sigmoid 보정 |
+| 보정 교차검증 | `group_id` 기준 `GroupKFold(5)`. 같은 지표 그룹이 자기 보정에 쓰이지 않음 |
+| 시드 | 42 (같은 라이브러리 버전에서 결정적) |
+| 추론 | 입력을 문장으로 나눠 5개 영역 확률을 평균 |
 
-Why this model: it is the best-scoring configuration in the experiment repository
-(71.5% top-1 / 89.2% top-2). fastText (62.7%), frozen multilingual-E5 + linear SVM
-(52.5%), and web-corpus initialization did not beat it on the same split. Details and
-references: [findings.md](findings.md).
+이 모델을 고른 이유: 실험 저장소에서 가장 높은 설정입니다(top-1 71.5% / top-2 89.2%).
+fastText(62.7%), 고정 multilingual-E5 + 선형 SVM(52.5%), 웹 말뭉치 초기화는 같은 분할에서
+이보다 낮았습니다. 근거와 참조: [findings.md](findings.md).
 
-## Validation results
+## 검증 결과
 
-From `models/metrics.json` (158 records, 13 groups):
+`models/metrics.json` (158행, 13개 그룹):
 
-| Metric | Value |
+| 지표 | 값 |
 |---|---:|
-| Accuracy | 0.7152 |
+| 정확도 | 0.7152 |
 | Macro-F1 | 0.7087 |
-| Top-2 accuracy | 0.8924 |
+| top-2 정확도 | 0.8924 |
 
-Per area (gold n / predicted n / recall / precision):
+영역별 (정답 수 / 예측 수 / 재현율 / 정밀도):
 
-| Area | gold n | predicted n | recall | precision |
+| 영역 | 정답 n | 예측 n | 재현율 | 정밀도 |
 |---|---:|---:|---:|---:|
 | 자연탐구 | 40 | 45 | 0.825 | 0.733 |
 | 신체운동·건강 | 27 | 25 | 0.778 | 0.840 |
@@ -63,39 +60,37 @@ Per area (gold n / predicted n / recall / precision):
 | 의사소통 | 34 | 40 | 0.735 | 0.625 |
 | 사회관계 | 29 | 21 | 0.448 | 0.619 |
 
-Interpretation limits:
+해석 한계:
 
-1. The split was also used to select the configuration in the experiment repository,
-   so this is an exploratory validation score, not an independent test estimate.
-2. 158 records are only 13 independent groups; row-level accuracy overstates
-   precision. Group-mean accuracy is 0.713 (worst group 0.167).
-3. These numbers are for **single observation records**. The long-text path used by
-   the integration is unvalidated beyond three hand-written examples.
+1. 이 분할은 `ml/`에서 설정을 고를 때도 쓰였습니다. 독립 테스트 추정치가 아닌
+   탐색적 검증 점수입니다.
+2. 158행은 독립 그룹 13개뿐이라 행 단위 정확도는 정밀도를 과대평가합니다.
+   그룹 평균 정확도는 0.713이고 최악 그룹은 0.167입니다.
+3. 이 수치는 **관찰 기록 1건** 기준입니다. 통합이 쓰는 장문 경로는 손으로 쓴 예시 3건
+   외에 검증된 적이 없습니다.
 
-## Known weaknesses
+## 알려진 약점
 
-- **사회관계 under-selection.** Recall 0.448: the model predicts 사회관계 for 21 of 158
-  records while 29 are gold. In a demo, 사회관계 rarely appears as the strongest area.
-  Cause is documented in the probe study: for some indicator groups the scene's theme
-  and the assessed area diverge (for example a family scene labeled 사회관계, leaf
-  textures labeled 예술경험). Strong external judges also fail on those groups.
-- **Group-level outliers.** One validation group (`KI-3-04`, family scene) is correct
-  for only 17% of its rows.
-- **No abstention.** Empty evidence still returns probabilities; the integration must
-  not present a "weakest area" as an assessment.
-- **Spoken/transcribed input** (ASR errors, fillers, multiple speakers) is untested.
-- Calibration is per segment; averaging segments changes the effective confidence, so
-  do not tune a threshold on the averaged probability without new labels.
+- **사회관계 저선택.** 재현율 0.448. 정답 29행 중 21행만 사회관계로 예측합니다.
+  데모에서 사회관계가 가장 강한 영역으로 거의 나오지 않습니다. 원인은 프로브 실험에
+  기록되어 있습니다: 일부 지표 그룹은 장면의 주제와 평가 대상 영역이 어긋납니다
+  (가족 장면이 사회관계, 나뭇잎 질감이 예술경험). 강한 외부 판단자도 같은 그룹에서 틀립니다.
+- **그룹 단위 이상치.** 검증 그룹 `KI-3-04`(가족 장면)는 행의 17%만 맞습니다.
+- **기권 없음.** 근거가 비어 있어도 확률을 냅니다. 통합은 `weakest_area`를 판단으로
+  제시하지 말아야 합니다.
+- **음성·전사 입력**(인식 오류, 간투어, 다중 화자)은 미검증입니다.
+- 보정은 문장 단위입니다. 문장을 평균하면 실효 확신도가 달라지므로, 새 라벨 없이
+  평균 확률에 임계값을 걸지 마세요.
 
-## Ethical / privacy notes
+## 윤리·프라이버시
 
-Descriptions are about children. The model returns coarse area labels and is not a
-developmental screening tool. Do not store raw descriptions longer than the team's
-agreed policy; the model itself keeps no state and writes no logs.
+설명은 아동에 관한 것입니다. 이 모델은 굵은 영역 라벨을 돌려주는 분류이고 발달 선별
+도구가 아닙니다. 원문 설명은 팀이 정한 보존 정책보다 오래 저장하지 마세요. 모델은
+상태를 유지하지 않고 로그를 남기지 않습니다.
 
-## Versioning
+## 버전 관리
 
-- `0.1.0` (schema 1.0): first shipped artifact, 2026-11-23.
-- Retraining rewrites `models/area_model.joblib`, `models/metadata.json` and
-  `models/metrics.json`. Bump the package version when the contract or the feature
-  pipeline changes.
+- `0.1.0` (스키마 1.0): 첫 배포 아티팩트, 2026-11-23.
+- 재학습하면 `models/area_model.joblib`, `models/metadata.json`,
+  `models/metrics.json`이 다시 쓰입니다. 계약이나 특징 파이프라인이 바뀌면
+  패키지 버전을 올리세요.

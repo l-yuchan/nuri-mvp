@@ -1,95 +1,87 @@
-# Findings behind this MVP
+# 이 MVP의 근거
 
-This file records why the shipped model is the shipped model, and which numbers may
-be quoted. The full experiment record lives in the sibling directory `ml/`
-(`EXPERIMENTS.md`, `HIERARCHICAL.md`, `CHILD_PROFILE.md`, `INDICATOR_LINKING.md`,
-`ABLATION.md`, `probes/`). Nothing here was re-run for this repository except the
-final training, which reproduced the validation score exactly.
+이 문서는 배포 모델이 왜 이 모델인지, 어떤 수치를 인용해도 되는지를 기록합니다. 전체 실험
+기록은 자매 디렉터리 `ml/`에 있습니다(`EXPERIMENTS.md`, `HIERARCHICAL.md`,
+`CHILD_PROFILE.md`, `INDICATOR_LINKING.md`, `ABLATION.md`, `probes/`). 이 저장소에서
+다시 돌린 것은 최종 학습뿐이고, 검증 점수는 실험 기록과 정확히 일치했습니다.
 
-## 1. Model comparison on the same fixed split
+## 1. 같은 고정 분할에서의 모델 비교
 
-Best configuration per representation family, 666 train / 158 val, selected on
-validation Macro-F1 in the experiment repository:
+표현 계열별 최고 설정, 학습 666 / 검증 158, 실험 저장소에서 검증 Macro-F1로 선택:
 
-| Representation | Setting | Accuracy | Macro-F1 | Top-2 |
+| 표현 | 설정 | 정확도 | Macro-F1 | Top-2 |
 |---|---|---:|---:|---:|
-| **Character 2-5 TF-IDF + calibrated LinearSVC** | C=10, sigmoid, group-aware CV | **0.7152** | **0.7087** | **0.8924** |
-| Character 2-5 TF-IDF + LinearSVC (uncalibrated) | C=10 | 0.6899 | 0.6798 | 0.8734 |
-| Character 2-5 TF-IDF + logistic regression | C=10 | 0.6519 | 0.6420 | 0.8671 |
-| Jamo 3-8 TF-IDF + LinearSVC | C=1 | 0.6329 | 0.6286 | 0.8671 |
-| Supervised fastText, random init | 100 epochs | 0.6266 | 0.6148 | 0.8544 |
-| Supervised fastText, web-corpus init | 100 epochs | 0.5570 | 0.5500 | 0.8038 |
-| Frozen multilingual-E5-small + LinearSVC | C=1 | 0.5253 | 0.5113 | 0.7722 |
-| fastText CBOW sentence vectors + logistic | C=10 | 0.4114 | 0.4181 | 0.6139 |
+| **문자 2-5 TF-IDF + 보정 LinearSVC** | C=10, sigmoid, 그룹 기준 CV | **0.7152** | **0.7087** | **0.8924** |
+| 문자 2-5 TF-IDF + LinearSVC (비보정) | C=10 | 0.6899 | 0.6798 | 0.8734 |
+| 문자 2-5 TF-IDF + 로지스틱 회귀 | C=10 | 0.6519 | 0.6420 | 0.8671 |
+| 자모 3-8 TF-IDF + LinearSVC | C=1 | 0.6329 | 0.6286 | 0.8671 |
+| 지도학습 fastText, 랜덤 초기화 | 100 epoch | 0.6266 | 0.6148 | 0.8544 |
+| 지도학습 fastText, 웹 말뭉치 초기화 | 100 epoch | 0.5570 | 0.5500 | 0.8038 |
+| 고정 multilingual-E5-small + LinearSVC | C=1 | 0.5253 | 0.5113 | 0.7722 |
+| fastText CBOW 문장벡터 + 로지스틱 | C=10 | 0.4114 | 0.4181 | 0.6139 |
 
-The calibration step is a real gain (+2.7 points accuracy, +4.9 points top-2) and is
-cheap. Semantic representations did not help on this data size; the 25-run ablation
-showed that the web-corpus initialization benefit was a vector-norm effect
-(shuffled vectors scored identically), and no configuration beat the TF-IDF model.
+보정은 실제 이득입니다(정확도 +2.7%p, top-2 +4.9%p). 의미 표현은 이 데이터 규모에서
+도움이 되지 않았습니다. 25회 통제 실험에서 웹 말뭉치 초기화의 이득은 벡터 노름 효과였고
+(셔플 벡터가 같은 점수), TF-IDF 모델을 넘은 설정은 없었습니다.
 
-## 2. Why long text is segmented and averaged
+## 2. 장문을 문절해 평균하는 이유
 
-The model was trained on single observation records. The MVP must consume a long
-description. Two facts from the experiment repository support the segmentation +
-mean-probability design:
+모델은 관찰 기록 1건으로 학습됐습니다. MVP는 장문을 받아야 합니다. 분절+확률 평균 설계를
+뒷받침하는 실험 저장소의 사실 두 가지:
 
-- The child-profile experiment showed that pooling more observations of the same item
-  improves within-child ranking monotonically (m=1: NDCG@2 0.80, QWK 0.58; m=3:
-  0.88, 0.74). Averaging, not taking one segment, is the better estimator.
-- The probe study showed that single-vignette ambiguity is structural for a few
-  indicator groups, so averaging a few independent sentences reduces the chance that
-  one ambiguous sentence decides the result.
+- 아동 프로필 실험에서 같은 항목의 관찰을 더 모으면 아동 내 순위가 단조 증가했습니다
+  (m=1: NDCG@2 0.80, QWK 0.58; m=3: 0.88, 0.74). 한 문장을 고르는 것보다 평균이 나은
+  추정입니다.
+- 프로브 실험에서 일부 지표 그룹의 단일 장면 모호성은 구조적입니다. 독립적인 문장 몇 개를
+  평균하면 애매한 한 문장이 결과를 결정할 가능성이 줄어듭니다.
 
-This is a design argument, not a measured result: the long-text path has only been
-exercised on three hand-written examples (`examples/`), each of which returns its
-intended area at rank 1. Treat that as a smoke check, not an accuracy claim.
+이것은 설계 논거이지 측정 결과가 아닙니다. 장문 경로는 손으로 쓴 예시 3건(`examples/`)에서만
+확인했고, 모두 의도한 영역이 1위로 나왔습니다. 스모크 확인으로만 취급하세요.
 
-## 3. What the numbers do and do not mean
+## 3. 수치가 의미하는 것과 아닌 것
 
-- **Top-1 0.7152**: the gold area equals the highest-probability area for 71.5% of
-  validation records. Group-mean accuracy is 0.713 over 13 groups (worst 0.167), so
-  row-level accuracy overstates independent-trial precision.
-- **Top-2 0.8924**: the gold area appears among the top two. It says nothing about
-  whether the second area is the "second strongest" in any real sense. The contract
-  therefore calls it a candidate.
-- **Calibration**: sigmoid calibration of a linear SVM; probabilities are usable for
-  comparison inside one response. Mean confidence when correct was 0.573 vs 0.515 when
-  wrong, so confidence separates errors only weakly.
-- **Selection leak**: `val.csv` selected the configuration in `ml/`. A true held-out
-  test set does not exist. If a test set is later carved out, do not reuse this
-  repository's metrics as the comparison baseline without recomputing.
+- **top-1 0.7152**: 검증 행의 71.5%에서 정답 영역이 최고 확률 영역과 같습니다.
+  그룹 평균은 13개 그룹에 대해 0.713(최악 0.167)이라, 행 단위 정확도는 독립 시행 정밀도를
+  과대평가합니다.
+- **top-2 0.8924**: 정답이 상위 2개 안에 들었다는 뜻입니다. 두 번째가 현실에서 "두 번째로
+  강한 영역"이라는 뜻은 아니므로, 계약에서는 "후보"라고 부릅니다.
+- **보정**: 선형 SVM의 sigmoid 보정입니다. 한 응답 안에서 비교할 수 있는 확률이고,
+  맞았을 때 평균 확신도 0.573, 틀렸을 때 0.515로 오류 분리력은 약합니다.
+- **선택 누수**: `ml/`에서 설정을 고를 때 `val.csv`를 썼습니다. 진짜 홀드아웃 테스트셋은
+  없습니다. 나중에 테스트셋을 떼어 낸다면, 이 저장소의 수치를 비교 기준선으로 그대로 쓰지
+  말고 다시 계산하세요.
 
-## 4. Item-level work that is intentionally not in this MVP
+## 4. 이 MVP에 일부러 넣지 않은 항목 단위 작업
 
-The experiment repository went further than area classification. None of it is part of
-this contract, but the results explain why the MVP stops at areas:
+실험 저장소는 영역 분류보다 더 나아갔습니다. 이 계약에는 들어가지 않지만, MVP가 영역에서
+멈추는 이유를 설명합니다.
 
-| Topic | Result | Why out of scope |
+| 주제 | 결과 | 범위 밖인 이유 |
 |---|---|---|
-| Observation -> indicator linking (59 candidates) | Frozen E5 zero-shot Recall@1 24.2%; char TF-IDF 19.7%; trained projections 1.5-5.9% | Too weak to drive a demo; training on seen indicators destroys unseen transfer |
-| Developmental level 1-4 | 56.1% exact, ±1 85.6%, QWK 0.576 | Not requested for this MVP; 3 is a boundary (21% exact) |
-| Synthetic child profile (item levels + strong/weak items) | NDCG@2 0.88 with oracle links, 0.16-0.27 with predicted links | The linking bottleneck makes the end-to-end number unusable |
-| Recommendation / LED mapping | Not implemented anywhere | Explicitly outside the current interest |
+| 관찰 -> 지표 연결(후보 59개) | 고정 E5 제로샷 Recall@1 24.2%, 문자 TF-IDF 19.7%, 학습 투영 1.5-5.9% | 데모를 이끌기엔 너무 약하고, 학습을 붙이면 미학습 지표 전이가 무너짐 |
+| 발달 수준 1-4 | 정확 56.1%, ±1 85.6%, QWK 0.576 | 이 MVP 요구가 아님. 3수준이 경계(21%) |
+| 합성 아동 프로필(항목 수준+강·약) | 오라클 링크 NDCG@2 0.88, 예측 링크 0.16-0.27 | 연결 병목 때문에 종단 수치를 쓸 수 없음 |
+| 추천 / 지도 LED | 어디에도 구현 없음 | 현재 관심 범위 밖으로 명시됨 |
 
-If a later version needs item-level output, the order of work is: improve linking
-without fitting on seen indicators, then re-run the profile evaluation. Adding a level
-head or more training does not fix the linking bottleneck.
+나중에 항목 단위 출력이 필요하면 순서는 이렇습니다: 미학습 지표에 학습을 붙이지 않으면서
+연결을 개선하고, 그다음 프로필 평가를 다시 돌립니다. 수준 헤드를 추가하거나 학습을 더
+하는 것으로는 연결 병목이 풀리지 않습니다.
 
-## 5. Reproduction
+## 5. 재현
 
 ```sh
-uv run python -m nuri_mvp train     # rewrites models/, prints validation summary
-uv run python -m nuri_mvp evaluate  # re-scores the shipped artifact
-uv run pytest                       # includes a retrain check against 0.7152 / 0.8924
+uv run python -m nuri_mvp train     # models/ 재작성, 검증 요약 출력
+uv run python -m nuri_mvp evaluate  # 배포 아티팩트 재채점
+uv run pytest                       # 0.7152 / 0.8924 재현 검사 포함
 ```
 
-`models/metadata.json` records the seed, library versions, parameters and the sha256
-of both CSVs, so a teammate can confirm the artifact matches `data/`.
+`models/metadata.json`에 시드, 라이브러리 버전, 파라미터, 두 CSV의 sha256이 있어서
+아티팩트가 `data/`와 맞는지 조원이 확인할 수 있습니다.
 
-## 6. References
+## 6. 참고
 
-- `../ml/EXPERIMENTS.md` - consolidated experiment results and metric definitions.
-- `../ml/HIERARCHICAL.md` - area + level system and anti-confound checks.
-- `../ml/CHILD_PROFILE.md` - aggregation evidence (NDCG/QWK vs number of observations).
-- `../ml/INDICATOR_LINKING.md` - item linking protocol, zero-shot results, limits.
-- `../ml/probes/analysis.md` - label-quality probes (LLM + human).
+- `../ml/EXPERIMENTS.md` - 실험 통합 결과와 지표 정의.
+- `../ml/HIERARCHICAL.md` - 영역+수준 시스템과 교란 점검.
+- `../ml/CHILD_PROFILE.md` - 관찰 수에 따른 집계 근거(NDCG/QWK).
+- `../ml/INDICATOR_LINKING.md` - 지표 연결 프로토콜, 제로샷 결과, 한계.
+- `../ml/probes/analysis.md` - 라벨 품질 프로브(LLM + 사람).

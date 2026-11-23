@@ -1,49 +1,48 @@
-# Nuri area MVP
+# 누리 영역 MVP
 
-Long Korean description of a child -> **strongest Nuri area** and **second strongest area**.
+아동에 대한 장문 한국어 설명 -> **가장 강한 누리 영역**과 **두 번째 영역**.
 
-This repository is the ML deliverable for the integration system. It is deliberately
-small: one classifier, one artifact, one JSON contract, no experiment code. The
-research record (all tested alternatives, probes, item-level work) stays in the
-`ml/` experiment directory and is summarized in [docs/findings.md](docs/findings.md).
+이 저장소는 통합 시스템을 위한 ML 산출물입니다. 일부러 작게 유지했습니다: 분류기 하나,
+아티팩트 하나, JSON 계약 하나, 실험 코드 없음. 실험 기록(비교한 모든 대안, 프로브,
+항목 단위 작업)은 `ml/` 실험 디렉터리에 그대로 두었고, 요약은
+[docs/findings.md](docs/findings.md)에 있습니다.
 
 ```
-description text
-   -> split into sentence-level segments
-   -> per-segment calibrated area probabilities (5 areas)
-   -> mean over segments
-   -> ranked areas, strongest / second / weakest
+설명 텍스트
+   -> 문장 단위 분절
+   -> 문장별 5개 영역 확률 (보정된 SVM)
+   -> 문장 평균
+   -> 영역 순위, strongest / second / weakest
 ```
 
-## Current performance
+## 현재 성능
 
-Validation split shipped with the data: 158 records over 13 indicator groups
-(`data/val.csv`, `models/metrics.json`).
+데이터에 포함된 검증 분할: 13개 지표 그룹의 158행 (`data/val.csv`,
+`models/metrics.json`).
 
-| Metric | Value |
+| 지표 | 값 |
 |---|---:|
-| Top-1 area accuracy | 0.7152 |
+| top-1 영역 정확도 | 0.7152 |
 | Macro-F1 | 0.7087 |
-| Top-2 accuracy (true area in ranks 1-2) | 0.8924 |
+| top-2 정확도 (정답이 1-2위 안) | 0.8924 |
 
-These are exploratory validation scores on the same split that was used for model
-selection in the experiment repository; there is no separate test set yet. The
-long-text path (segmentation + averaging) is not part of that number: it was checked
-on three hand-written example descriptions only (see [examples/](examples/)).
-Read [docs/model_card.md](docs/model_card.md) before quoting any number.
+탐색적 검증 점수이며, `ml/`에서 설정 선택에 쓴 것과 같은 분할입니다. 별도 테스트셋은
+아직 없습니다. 장문 경로(분절+평균)는 이 수치에 포함되지 않습니다. 손으로 쓴 예시
+3건으로만 확인했습니다([examples/](examples/)). 수치를 인용하기 전에
+[docs/model_card.md](docs/model_card.md)를 읽어 주세요.
 
-## Quickstart
+## 빠른 시작
 
-Requires Python 3.11+.
+Python 3.11 이상.
 
 ```sh
 uv venv
 uv pip install -e ".[dev]"
-uv run python -m nuri_mvp evaluate     # score the shipped artifact on data/val.csv
-uv run pytest                          # 23 tests, including a retrain-to-0.7152 check
+uv run python -m nuri_mvp evaluate     # 저장된 아티팩트를 data/val.csv로 채점
+uv run pytest                          # 23개 테스트, 0.7152 재현 검사 포함
 ```
 
-Without uv:
+uv가 없다면:
 
 ```sh
 python -m venv .venv
@@ -51,33 +50,33 @@ python -m venv .venv
 .venv/Scripts/python -m nuri_mvp evaluate
 ```
 
-Retraining is reproducible from `data/train.csv` and takes a few seconds:
+`data/train.csv`로 재학습은 몇 초면 되고 결과가 재현됩니다:
 
 ```sh
-uv run python -m nuri_mvp train        # rewrites models/area_model.joblib + metadata
+uv run python -m nuri_mvp train        # models/area_model.joblib + metadata 재작성
 ```
 
-## Use it
+## 사용법
 
 ```python
 from nuri_mvp import Predictor
 
-predictor = Predictor.from_dir("models")  # once, at startup
-result = predictor.predict("아이가 색종이를 오려 ...")  # any length of Korean text
+predictor = Predictor.from_dir("models")  # 시작할 때 한 번
+result = predictor.predict("아이가 색종이를 오려 ...")  # 길이 제한 없는 한국어 텍스트
 
 result["strongest_area"]  # "예술경험"
 result["second_area"]  # "사회관계"
-result["areas"]  # all five, ranked, with probabilities
+result["areas"]  # 5개 영역 전체, 확률과 함께 순위
 ```
 
-From the command line:
+명령줄:
 
 ```sh
 uv run python -m nuri_mvp predict --file examples/inputs/parent_01_art.txt
 uv run python -m nuri_mvp predict --text "아이가 블록으로 높은 탑을 쌓았습니다."
 ```
 
-Example response (`examples/outputs/parent_01_art.json`, shortened):
+응답 예시 (`examples/outputs/parent_01_art.json`, 일부):
 
 ```json
 {
@@ -98,34 +97,30 @@ Example response (`examples/outputs/parent_01_art.json`, shortened):
 }
 ```
 
-The full field-by-field contract, error behaviour and integration options are in
-[docs/interface.md](docs/interface.md).
+필드별 계약, 오류 동작, 통합 방법은 [docs/interface.md](docs/interface.md)에 있습니다.
 
-Measured on this machine (CPU, Python 3.14 in the reference environment): model load
-186 ms once, single prediction median 5.0 ms, p95 6.3 ms.
+이 장비(CPU)에서 측정: 모델 로드 186ms(한 번), 추론 중앙값 5.0ms, p95 6.3ms.
 
-## What it does not do
+## 하지 않는 것
 
-- No item (indicator) level output, no developmental level 1-4, no recommendation,
-  no LED mapping, no speech input. Those are outside this MVP.
-- No "not enough evidence" abstention. Every non-empty input gets a ranking; the
-  weakest area is a by-product of the ranking and is **not** validated as a judgment.
-- Korean text only, and the shipped model has never been evaluated on spontaneously
-  spoken or transcribed parent speech.
+- 항목(지표) 단위 출력, 발달 수준 1-4, 활동 추천, 지도 LED, 음성 입력은 범위 밖입니다.
+- "근거 없음" 기권 판정이 없습니다. 비어 있지 않은 입력은 항상 순위를 냅니다.
+  `weakest_area`는 순위의 부산물이며 판단으로 검증되지 않았습니다.
+- 한국어 텍스트 전용이고, 실제 부모 발화·전사문으로는 평가된 적이 없습니다.
 
-## Repository layout
+## 저장소 구조
 
 ```
-data/           train.csv, val.csv (fixed split, see docs/data_sheet.md)
-models/         shipped artifact (joblib, ~4.8 MB) + metadata.json + metrics.json
+data/           train.csv, val.csv (고정 분할, docs/data_sheet.md 참고)
+models/         배포 아티팩트 (joblib 약 4.8MB) + metadata.json + metrics.json
 src/nuri_mvp/   areas.py, text.py, model.py, pipeline.py, cli.py
-tests/          text, contract, and training-reproduction tests
-examples/       three hand-written long descriptions + the JSON they produce
+tests/          분절, 계약, 재학습 재현 테스트
+examples/       손으로 쓴 장문 3건 + 실제 출력 JSON
 docs/           interface.md, model_card.md, data_sheet.md, findings.md
 ```
 
-## Data note
+## 데이터 주의
 
-The dataset contains KICCE observation scales and Ministry of Education casebook
-excerpts provided for the course project. Do not publish the CSV files or the
-derived model outside the team / course context. See [docs/data_sheet.md](docs/data_sheet.md).
+데이터셋은 과목 프로젝트용으로 제공된 KICCE 관찰척도와 교육부 사례집 발췌입니다.
+CSV와 파생 모델을 팀·과목 범위 밖으로 공개하지 마세요.
+[docs/data_sheet.md](docs/data_sheet.md)를 참고하세요.

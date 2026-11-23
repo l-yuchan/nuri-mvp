@@ -1,10 +1,10 @@
-# Data files
+# 데이터 파일
 
-- `train.csv` (666 rows) and `val.csv` (158 rows): fixed group-disjoint split of
-  KICCE observation vignettes and Ministry of Education casebook excerpts.
+- `train.csv`(666행), `val.csv`(158행): KICCE 관찰 장면과 교육부 사례집 발췌의 고정된
+  그룹 분리 분할입니다.
 
-Provenance, license restrictions, label definition, and what is missing are in
-[../docs/data_sheet.md](../docs/data_sheet.md).
+출처, 라이선스 제한, 라벨 정의, 빠진 항목은
+[../docs/data_sheet.md](../docs/data_sheet.md)에 있습니다.
 
-Only `text` (input) and `label` (target) are used by this repository. Do not commit
-additional raw data or transcripts here; put them in the team's storage.
+이 저장소가 쓰는 것은 입력 `text`와 정답 `label`뿐입니다. 추가 원본 데이터나 전사문을
+여기에 커밋하지 말고 팀 저장소에 두세요.

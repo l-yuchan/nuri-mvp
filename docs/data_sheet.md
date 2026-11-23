@@ -1,72 +1,63 @@
-# Data sheet
+# 데이터 시트
 
-Scope: the two CSVs shipped in `data/` and the model derived from them. This is not a
-complete dataset release and the files must not be redistributed outside the
-team / course context.
+범위: `data/`의 CSV 두 개와 그것으로 만든 모델. 완전한 데이터 공개가 아니며,
+팀·과목 범위 밖으로 재배포하지 마세요.
 
-## Contents
+## 내용
 
-| File | Rows | Columns used by this repo | sha256 |
+| 파일 | 행 | 이 저장소가 쓰는 열 | sha256 |
 |---|---:|---|---|
 | `train.csv` | 666 | `id, text, label, group_id, source` | `810703446f63c7f3ceafff783469e0bcdfce2729291321ba611d7662b3640c2c` |
-| `val.csv` | 158 | same | `21c2976c7aa2ec253fc61acb3c74b635faff8db40c35b3c5088e95fc9aac6982` |
+| `val.csv` | 158 | 동일 | `21c2976c7aa2ec253fc61acb3c74b635faff8db40c35b3c5088e95fc9aac6982` |
 
-Both files carry more columns than this repo uses (`session, content_category,
+두 파일 모두 이 저장소가 쓰지 않는 열을 더 갖고 있습니다(`session, content_category,
 item_no, item_text, context, level, age, label_source, use_default, split, note`).
-`level` and `item_text` exist only for KICCE rows and are not used here.
+`level`과 `item_text`는 KICCE 행에만 있고 여기서는 쓰지 않습니다.
 
-## Provenance
+## 출처
 
-- **KICCE 유아관찰척도 관찰사례** (scale vignettes): 704 rows overall (572 train /
-  132 val). Each indicator group contains 12 vignettes, three per developmental level
-  (1-4). The label is the area of the assessed **indicator**, not the dominant theme
-  of the vignette text.
-- **교육부·보건복지부 놀이 사례집 발췌** (2020): 120 rows overall (94 train / 26 val),
-  page-level groups (`CB-p3xx`), mixed labels within a page group.
-- Both were extracted by the team for the course project. They are **institute and
-  public documents, not team-collected field data**. No parent, teacher or child was
-  recorded or interviewed for these files.
+- **KICCE 유아관찰척도 관찰사례**: 전체 704행(학습 572 / 검증 132). 지표 그룹 하나에
+  발달 수준 1-4별 장면 3개, 총 12개 장면이 들어 있습니다. 라벨은 장면 텍스트의 주제가
+  아니라 **평가 대상 지표의 영역**입니다.
+- **교육부·보건복지부 놀이 사례집 발췌**(2020): 전체 120행(학습 94 / 검증 26).
+  페이지 단위 그룹(`CB-p3xx`)이며 한 그룹 안에 라벨이 섞여 있습니다.
+- 두 자료 모두 과목 프로젝트를 위해 팀이 추출했습니다. **기관·공개 문서이지 팀이 현장에서
+  수집한 데이터가 아닙니다.** 부모·교사·아동을 녹음하거나 인터뷰하지 않았습니다.
 
-## Split
+## 분할
 
-- Group-disjoint by `group_id`: no group appears in both splits. The loader enforces
-  this and also rejects identical normalized text across splits.
-- `val.csv` has 13 groups (11 KICCE indicator groups + 2 casebook pages).
-- The split is fixed for the project; this repository never reshuffles it.
-- Splitting by session/date is not applicable to extracted documents; the session
-  column records the extraction batch, not a data-collection session.
+- `group_id` 기준 그룹 분리: 같은 그룹이 두 분할에 나타나지 않습니다. 로더가 이를
+  강제하고, 정규화 후 동일한 텍스트가 두 분할에 있는 경우도 거부합니다.
+- `val.csv`는 13개 그룹(11개 KICCE 지표 그룹 + 2개 사례집 페이지)입니다.
+- 프로젝트 기간 동안 분할은 고정이며, 이 저장소는 재섞기를 하지 않습니다.
+- 추출 문서에는 세션/날짜 분할이 해당하지 않습니다. `session` 열은 데이터 수집 세션이
+  아니라 추출 배치를 적은 값입니다.
 
-## Label definition and known ambiguity
+## 라벨 정의와 알려진 모호성
 
-One label per row, five areas. For KICCE rows the gold label follows the assessed
-indicator, so the same scene can look like another area to a reader. Documented
-problem groups from the probe study in the experiment repository:
+행마다 라벨 1개, 5개 영역. KICCE 행의 정답은 평가 대상 지표를 따르므로, 같은 장면을
+다른 영역으로 읽을 수 있습니다. 실험 저장소의 프로브에서 확인된 문제 그룹:
 
-- `KI-4-02` (예술경험, leaf-texture scenes): external judges chose 자연탐구 in 65% of
-  cases.
-- `KI-2-05` (의사소통, sketchbook conflict): 48% chose 사회관계.
-- `KI-3-04` (사회관계, family scene): 40% wrong; this is also the weakest validation
-  group (17% row accuracy).
-- `KI-3-12` (사회관계, other-culture greeting): read as 의사소통 by both human and
-  LLM probes.
+- `KI-4-02` (예술경험, 나뭇잎 질감 장면): 외부 판단자의 65%가 자연탐구를 골랐습니다.
+- `KI-2-05` (의사소통, 스케치북 갈등): 48%가 사회관계를 골랐습니다.
+- `KI-3-04` (사회관계, 가족 장면): 40%가 틀렸고, 검증에서 가장 약한 그룹입니다
+  (행 정확도 17%).
+- `KI-3-12` (사회관계, 다른 문화 인사): 사람 프로브와 LLM 모두 의사소통으로 읽었습니다.
 
-Label quality overall was judged defensible: gold-label plausibility 4.2-4.6 out of 5
-across four LLM runs, with only 5 items flagged by all four.
+라벨 품질 자체는 방어 가능한 수준으로 평가됐습니다: LLM 4회의 정답 라벨 타당성 평점이
+5점 만점에 4.2~4.6, 4회 모두 문제로 표시한 항목은 5개뿐이었습니다.
 
-## What is missing
+## 빠진 것
 
-- **No team-collected data.** The course rubric asks for at least some data collected
-  in or near the use environment. Not satisfied by this repository.
-- **No double labeling / inter-annotator agreement.** There is no labeling protocol
-  file and no second annotator.
-- **No test set.** `val.csv` doubles as the reporting split and was used for model
-  selection in the experiment repository.
-- **No parent-speech data.** Descriptions here are written observation records, not
-  transcribed parent speech.
-- No age or setting metadata is used; casebook rows carry `age` inconsistently.
+- **팀 자체 수집 데이터 없음.** 과제 루브릭은 사용 환경 또는 유사 환경에서 수집한
+  데이터를 일부 요구합니다. 이 저장소는 충족하지 않습니다.
+- **이중 라벨링·라벨러 간 일치율 없음.** 라벨링 프로토콜 문서도, 두 번째 라벨러도 없습니다.
+- **테스트셋 없음.** `val.csv`가 보고용과 `ml/`의 설정 선택에 함께 쓰였습니다.
+- **부모 발화 데이터 없음.** 여기 설명은 작성된 관찰 기록이지 부모 음성 전사가 아닙니다.
+- 나이·장소 메타데이터는 쓰지 않습니다. 사례집 행의 `age`는 일관되지 않습니다.
 
-## Privacy
+## 프라이버시
 
-The text describes children's behavior but contains no names or identifiers in the
-shipped files (only `N###` ids). Speech transcripts produced by the integration are
-not part of this dataset and must follow the team's consent/retention policy.
+텍스트는 아동 행동을 설명하지만 배포 파일에는 이름이나 식별자가 없습니다(`N###` id만).
+통합 시스템이 만드는 음성 전사는 이 데이터셋에 포함되지 않으며, 팀의 동의·보존 정책을
+따라야 합니다.
