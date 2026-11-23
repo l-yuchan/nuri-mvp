@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "model_name": "char_2-5_tfidf+linear_svc_c10_calibrated",
+  "trained_at": "2026-11-23T08:29:09+00:00",
+  "python": "3.14.4",
+  "scikit_learn": "1.9.1",
+  "seed": 42,
+  "params": {
+    "features": "char 2-5 gram TF-IDF, sublinear_tf, min_df=1, l2, train-only fit",
+    "preprocessor": "NFC, lowercase Latin, whitespace collapse",
+    "classifier": "LinearSVC C=10, sigmoid calibration",
+    "calibration_cv": "GroupKFold(5) over group_id"
+  },
+  "data": {
+    "train_rows": 666,
+    "train_groups": 57,
+    "label_counts": {
+      "사회관계": 140,
+      "신체운동·건강": 127,
+      "예술경험": 110,
+      "의사소통": 146,
+      "자연탐구": 143
+    },
+    "sha256": {
+      "train.csv": "810703446f63c7f3ceafff783469e0bcdfce2729291321ba611d7662b3640c2c",
+      "val.csv": "21c2976c7aa2ec253fc61acb3c74b635faff8db40c35b3c5088e95fc9aac6982"
+    }
+  },
+  "areas": [
+    "사회관계",
+    "신체운동·건강",
+    "예술경험",
+    "의사소통",
+    "자연탐구"
+  ]
+}

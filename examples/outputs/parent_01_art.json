@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "strongest_area": "예술경험",
+  "second_area": "사회관계",
+  "weakest_area": "신체운동·건강",
+  "areas": [
+    {
+      "rank": 1,
+      "area": "예술경험",
+      "probability": 0.362781
+    },
+    {
+      "rank": 2,
+      "area": "사회관계",
+      "probability": 0.291988
+    },
+    {
+      "rank": 3,
+      "area": "의사소통",
+      "probability": 0.14291
+    },
+    {
+      "rank": 4,
+      "area": "자연탐구",
+      "probability": 0.128783
+    },
+    {
+      "rank": 5,
+      "area": "신체운동·건강",
+      "probability": 0.073539
+    }
+  ],
+  "confidence": {
+    "top1_probability": 0.362781,
+    "gap_top1_top2": 0.070793
+  },
+  "segments": {
+    "used": 4,
+    "chars": 194,
+    "aggregation": "mean_area_probability"
+  },
+  "model": {
+    "name": "char_2-5_tfidf+linear_svc_c10_calibrated",
+    "trained_at": "2026-11-23T08:29:09+00:00",
+    "data_sha256": {
+      "train.csv": "810703446f63c7f3ceafff783469e0bcdfce2729291321ba611d7662b3640c2c",
+      "val.csv": "21c2976c7aa2ec253fc61acb3c74b635faff8db40c35b3c5088e95fc9aac6982"
+    }
+  }
+}

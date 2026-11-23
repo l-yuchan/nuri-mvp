@@ -1,0 +1,40 @@
+{
+  "n_rows": 158,
+  "n_groups": 13,
+  "accuracy": 0.7151898734177216,
+  "macro_f1": 0.7086949870479282,
+  "top2_accuracy": 0.8924050632911392,
+  "per_area": {
+    "사회관계": {
+      "gold_n": 29,
+      "predicted_n": 21,
+      "recall": 0.4482758620689655,
+      "precision": 0.6190476190476191
+    },
+    "신체운동·건강": {
+      "gold_n": 27,
+      "predicted_n": 25,
+      "recall": 0.7777777777777778,
+      "precision": 0.84
+    },
+    "예술경험": {
+      "gold_n": 28,
+      "predicted_n": 27,
+      "recall": 0.75,
+      "precision": 0.7777777777777778
+    },
+    "의사소통": {
+      "gold_n": 34,
+      "predicted_n": 40,
+      "recall": 0.7352941176470589,
+      "precision": 0.625
+    },
+    "자연탐구": {
+      "gold_n": 40,
+      "predicted_n": 45,
+      "recall": 0.825,
+      "precision": 0.7333333333333333
+    }
+  },
+  "note": "Exploratory validation score on the shipped split; the split was also used during model selection in the experiment repository."
+}
